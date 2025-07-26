@@ -1,0 +1,161 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mayur Darkviber's Vault</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #ffffff;
+      padding: 20px;
+    }
+    .section {
+      display: none;
+      max-width: 400px;
+      margin: auto;
+    }
+    input, button, select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      color: white;
+    }
+    button {
+      cursor: pointer;
+      background: #3f51b5;
+      border: none;
+    }
+    h2 {
+      text-align: center;
+    }
+    .entry {
+      background: #2a2a2a;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body><h2>🔐 Mayur Darkviber's Vault</h2><div id="register-section" class="section">
+  <h3>Create Master Password</h3>
+  <input id="master-pass" type="password" placeholder="Enter Master Password">
+  <input id="master-repass" type="password" placeholder="Re-enter Password">
+  <input id="recovery-question" placeholder="Recovery Question">
+  <input id="recovery-answer" placeholder="Recovery Answer">
+  <input id="mobile" type="text" placeholder="Mobile Number">
+  <button onclick="registerUser()">Register</button>
+</div><div id="login-section" class="section">
+  <h3>Login to Vault</h3>
+  <input id="login-pass" type="password" placeholder="Master Password">
+  <button onclick="loginUser()">Unlock</button>
+  <button onclick="showRecovery()">Forgot Password?</button>
+</div><div id="recovery-section" class="section">
+  <h3>Password Recovery</h3>
+  <p id="recovery-q"></p>
+  <input id="recovery-a" placeholder="Your Answer">
+  <button onclick="verifyRecovery()">Recover</button>
+</div><div id="vault-section" class="section">
+  <h3>Welcome, Mayur 👑</h3>
+  <input id="entry-title" placeholder="Title">
+  <input id="entry-user" placeholder="Username/Email">
+  <input id="entry-pass" placeholder="Password">
+  <button onclick="addEntry()">Add Entry</button>
+  <div id="vault-entries"></div>
+</div><script>
+  const get = id => document.getElementById(id);
+
+  const showSection = section => {
+    ['register-section', 'login-section', 'recovery-section', 'vault-section']
+      .forEach(id => get(id).style.display = 'none');
+    get(section).style.display = 'block';
+  };
+
+  const loadUser = () => {
+    const user = JSON.parse(localStorage.getItem('vaultUser'));
+    if (!user) showSection('register-section');
+    else showSection('login-section');
+  };
+
+  const registerUser = () => {
+    const pass = get('master-pass').value;
+    const repass = get('master-repass').value;
+    if (pass !== repass || !pass) return alert('Passwords do not match.');
+    const user = {
+      pass,
+      question: get('recovery-question').value,
+      answer: get('recovery-answer').value,
+      mobile: get('mobile').value
+    };
+    localStorage.setItem('vaultUser', JSON.stringify(user));
+    localStorage.setItem('vaultData', JSON.stringify([]));
+    alert('Registered! Please login.');
+    showSection('login-section');
+  };
+
+  const loginUser = () => {
+    const input = get('login-pass').value;
+    const user = JSON.parse(localStorage.getItem('vaultUser'));
+    if (input === user.pass) showVault();
+    else alert('Incorrect password');
+  };
+
+  const showRecovery = () => {
+    const user = JSON.parse(localStorage.getItem('vaultUser'));
+    get('recovery-q').innerText = user.question;
+    showSection('recovery-section');
+  };
+
+  const verifyRecovery = () => {
+    const input = get('recovery-a').value;
+    const user = JSON.parse(localStorage.getItem('vaultUser'));
+    if (input === user.answer) {
+      localStorage.removeItem('vaultUser');
+      localStorage.removeItem('vaultData');
+      alert('Reset successful. Please register again.');
+      showSection('register-section');
+    } else alert('Incorrect answer');
+  };
+
+  const showVault = () => {
+    showSection('vault-section');
+    displayEntries();
+  };
+
+  const addEntry = () => {
+    const entries = JSON.parse(localStorage.getItem('vaultData')) || [];
+    entries.push({
+      title: get('entry-title').value,
+      user: get('entry-user').value,
+      pass: get('entry-pass').value
+    });
+    localStorage.setItem('vaultData', JSON.stringify(entries));
+    displayEntries();
+  };
+
+  const displayEntries = () => {
+    const entries = JSON.parse(localStorage.getItem('vaultData')) || [];
+    get('vault-entries').innerHTML = entries.map((e, i) => `
+      <div class="entry">
+        <b>${e.title}</b><br>
+        👤 ${e.user} <br>
+        🔐 ${e.pass} <br>
+        <button onclick="deleteEntry(${i})">Delete</button>
+      </div>
+    `).join('');
+  };
+
+  const deleteEntry = i => {
+    const entries = JSON.parse(localStorage.getItem('vaultData')) || [];
+    if (confirm('Are you sure?')) {
+      entries.splice(i, 1);
+      localStorage.setItem('vaultData', JSON.stringify(entries));
+      displayEntries();
+    }
+  };
+
+  window.onload = loadUser;
+</script></body>
+</html>
